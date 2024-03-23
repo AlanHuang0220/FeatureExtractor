@@ -1,6 +1,7 @@
 from transformers import AutoProcessor, ClapModel, ASTModel, HubertModel, Wav2Vec2Model
 import librosa
 from transformers import logging
+from tqdm import tqdm
 
 
 logging.set_verbosity_error()
@@ -11,22 +12,23 @@ class AudioFeatureExtractor:
         self.model_name = model_name
         if model_name == "CLAP":
             self.processor = AutoProcessor.from_pretrained("laion/clap-htsat-unfused")
-            self.model = ClapModel.from_pretrained("laion/clap-htsat-unfused").to(0)
+            self.model = ClapModel.from_pretrained("laion/clap-htsat-unfused")
             self.target_sampling_rate = 48000
         elif model_name == "AST":
             self.processor = AutoProcessor.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593")
-            self.model = ASTModel.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593").to(0)
+            self.model = ASTModel.from_pretrained("MIT/ast-finetuned-audioset-10-10-0.4593")
             self.target_sampling_rate = 16000
         elif model_name == "Hubert":
             self.processor = AutoProcessor.from_pretrained("facebook/hubert-large-ls960-ft")
-            self.model = HubertModel.from_pretrained("facebook/hubert-large-ls960-ft").to(0)
+            self.model = HubertModel.from_pretrained("facebook/hubert-large-ls960-ft")
             self.target_sampling_rate = 16000
         elif model_name == "Wav2Vec2":
             self.processor = AutoProcessor.from_pretrained("facebook/wav2vec2-base-960h")
-            self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base-960h").to(0)
+            self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-base-960h")
             self.target_sampling_rate = 16000
         else:
             raise ValueError("Unsupported model.")
+        self.model.to(0).eval()
 
     def _load_audio(self, audio_path, start_time=None, end_time=None):
         if start_time is None or end_time is None:
@@ -51,7 +53,7 @@ class AudioFeatureExtractor:
         else:
             inputs = self.processor(audio_input, sampling_rate=sample_rate, return_tensors="pt").to(0).input_values
             hidden_states = self.model(inputs)['last_hidden_state'].squeeze(0)
-        print(f"{self.model_name}: {hidden_states.shape}")
+        tqdm.write(f"{self.model_name}: {hidden_states.shape}")
         return hidden_states
     
     @classmethod

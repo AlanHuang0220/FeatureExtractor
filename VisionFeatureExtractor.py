@@ -4,6 +4,7 @@ from PIL import Image
 import torch
 import cv2
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 logging.set_verbosity_error()
 
@@ -12,18 +13,19 @@ class VisionFeatureExtractor:
         self.model_name = model_name
         if model_name == "MobileNet":
             self.processor = AutoImageProcessor.from_pretrained("google/mobilenet_v1_1.0_224")
-            self.model = MobileNetV1Model.from_pretrained("google/mobilenet_v1_1.0_224").to(0)
+            self.model = MobileNetV1Model.from_pretrained("google/mobilenet_v1_1.0_224")
         elif model_name == "Swin":
             self.processor = AutoImageProcessor.from_pretrained("microsoft/swin-tiny-patch4-window7-224")
-            self.model = SwinModel.from_pretrained("microsoft/swin-tiny-patch4-window7-224").to(0)
+            self.model = SwinModel.from_pretrained("microsoft/swin-tiny-patch4-window7-224")
         elif model_name == "ViT":
             self.processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-            self.model = ViTModel.from_pretrained("google/vit-base-patch16-224-in21k").to(0)
+            self.model = ViTModel.from_pretrained("google/vit-base-patch16-224-in21k")
         elif model_name == "CLIP":
             self.processor = AutoProcessor.from_pretrained("openai/clip-vit-base-patch32")
-            self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(0)
+            self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
         else:
             raise ValueError("Unsupported model.")
+        self.model.to(0).eval()
         
     def _load_image(self, image_path):
         image = Image.open(image_path)
@@ -64,7 +66,7 @@ class VisionFeatureExtractor:
             with torch.no_grad():
                 inputs = self.processor(images=frames, return_tensors="pt").to(0)
                 hidden_states = self.model(**inputs).pooler_output
-        print(f"{self.model_name}: {hidden_states.shape}")
+        tqdm.write(f"{self.model_name}: {hidden_states.shape}")
         return hidden_states
     
     @classmethod
