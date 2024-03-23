@@ -4,6 +4,7 @@ from DataFormatter import DataFormatter
 from utils import check_file_existence, convert_mp4_to_wav, align_tensors_by_first_dim
 import os
 import pickle
+import json
 
 if __name__ == "__main__":
     audio_folder = 'F:/dataset/pretrain_dataset/VAST27M/audio'
@@ -36,6 +37,10 @@ if __name__ == "__main__":
 
             with open(f"{target_folder}/{row['clip_id']}/{audio_model}.pkl", 'wb') as f:
                 pickle.dump(audio_feature, f)
+
+            with open(f"{target_folder}/{row['clip_id']}/caption.json", 'w') as f:
+                f.write(json.dumps(row.to_dict(), indent=4))
+
         else:
             print(f"{row['clip_id'] } 不存在")
         
