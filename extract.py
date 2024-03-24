@@ -42,7 +42,11 @@ if __name__ == "__main__":
         audio_path = f"{audio_folder}/clip_{clip_id}.wav"
         if check_file_existence(video_path):
             if not check_file_existence(audio_path):
-                convert_mp4_to_wav(video_path, audio_path)
+                try:
+                    convert_mp4_to_wav(video_path, audio_path)
+                except OSError as e:
+                    tqdm.write(f"{clip_id}: {e}")
+                    continue
             
             tqdm.write(f"{clip_id} Encoding ...")
             os.makedirs(f"{target_folder}/{clip_id}", exist_ok=True)
