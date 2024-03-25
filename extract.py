@@ -16,7 +16,7 @@ class Config:
         self.video_folder = os.path.join(self.dataset_base_path, 'video')
         self.data_json_path = os.path.join(self.dataset_base_path, 'split_annotations1', json_file_name)
         self.target_folder = os.path.join(self.dataset_base_path, 'video_feature')
-        self.processed_clips_file = 'processed_clips.txt'
+        self.processed_clips_file = f'{json_file_name.split(".")[0]}_processed_clips.txt'
         self.columns_to_load = ['clip_id', 'vision_cap', 'audio_cap', 'subtitle', 'vast_cap']
         self.vision_model = 'CLIP'
         self.audio_model = 'CLAP'
@@ -48,6 +48,7 @@ def process_clip(row, config, vision_feature_extractor, audio_feature_extractor)
     clip_target_folder = os.path.join(config.target_folder, clip_id)
     
     if check_file_existence(video_path) and ensure_audio_exists(video_path, audio_path):
+        tqdm.write(f"{clip_id} Encoding...")
         os.makedirs(clip_target_folder, exist_ok=True)
         vision_feature = vision_feature_extractor.process_video(video_path)
         audio_feature = audio_feature_extractor.process_audio(audio_path)
@@ -61,6 +62,9 @@ def process_clip(row, config, vision_feature_extractor, audio_feature_extractor)
         
         with open(os.path.join(clip_target_folder, "caption.json"), 'w') as f:
             json.dump(row.to_dict(), f, indent=4)
+
+    else:
+        tqdm.write(f"{clip_id} not exist.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

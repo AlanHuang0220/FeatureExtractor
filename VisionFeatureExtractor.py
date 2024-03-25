@@ -3,7 +3,6 @@ from transformers import logging
 from PIL import Image
 import torch
 import cv2
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 logging.set_verbosity_error()
