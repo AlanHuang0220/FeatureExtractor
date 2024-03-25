@@ -57,8 +57,8 @@ def process_clip(row, config, vision_feature_extractor, audio_feature_extractor)
         
         with open(os.path.join(clip_target_folder, f"{config.vision_model}.pkl"), 'wb') as vf, \
              open(os.path.join(clip_target_folder, f"{config.audio_model}.pkl"), 'wb') as af:
-            pickle.dump(vision_feature, vf)
-            pickle.dump(audio_feature, af)
+            pickle.dump(vision_feature.detach().cpu().numpy(), vf)
+            pickle.dump(audio_feature.detach().cpu().numpy(), af)
         
         with open(os.path.join(clip_target_folder, "caption.json"), 'w') as f:
             json.dump(row.to_dict(), f, indent=4)
