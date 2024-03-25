@@ -1,18 +1,20 @@
 import os
-import pickle
+import sys
 import json
+import pickle
 from tqdm import tqdm
+from DataFormatter import DataFormatter
 from AudioFeatureExtractor import AudioFeatureExtractor
 from VisionFeatureExtractor import VisionFeatureExtractor
-from DataFormatter import DataFormatter
 from utils import check_file_existence, convert_mp4_to_wav, align_tensors_by_first_dim
 
+
 class Config:
-    def __init__(self):
+    def __init__(self, json_file_name):
         self.dataset_base_path = 'F:/dataset/pretrain_dataset/VAST27M'
         self.audio_folder = os.path.join(self.dataset_base_path, 'audio')
         self.video_folder = os.path.join(self.dataset_base_path, 'video')
-        self.data_json_path = os.path.join(self.dataset_base_path, 'split_annotations1/split_0.json')
+        self.data_json_path = os.path.join(self.dataset_base_path, 'split_annotations1', json_file_name)
         self.target_folder = os.path.join(self.dataset_base_path, 'video_feature')
         self.processed_clips_file = 'processed_clips.txt'
         self.columns_to_load = ['clip_id', 'vision_cap', 'audio_cap', 'subtitle', 'vast_cap']
@@ -61,15 +63,21 @@ def process_clip(row, config, vision_feature_extractor, audio_feature_extractor)
             json.dump(row.to_dict(), f, indent=4)
 
 if __name__ == "__main__":
-    config = Config()
+    if len(sys.argv) < 2:
+        print("Usage: python extract.py <JSON_FILE_NAME>")
+        sys.exit(1)
+    json_file_name = sys.argv[1]  # 從 command-line 讀取json檔名稱
+    config = Config(json_file_name)
 
+    # Instantiate feature extractor
     vision_feature_extractor = VisionFeatureExtractor(config.vision_model)
     audio_feature_extractor = AudioFeatureExtractor(config.audio_model)
 
     df = DataFormatter.from_vast27m(config.data_json_path, config.columns_to_load)
     processed_clips = load_processed_clips(config.processed_clips_file)
 
-    for index, row in tqdm(df.iterrows(), total=len(df), desc="Processing Clips"):
+    tqdm_desc = f"Processing Clips [{json_file_name}]"
+    for index, row in tqdm(df.iterrows(), total=len(df), desc=tqdm_desc):
         clip_id = row['clip_id']
         if clip_id in processed_clips:
             tqdm.write(f"{clip_id} already processed. Skipping...")
